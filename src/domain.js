@@ -8,7 +8,7 @@ export class SafeIntegrationError extends Error {
   toLog() { return { stage: this.stage, method: this.method, message: this.message }; }
 }
 
-const VK_HOST = String.raw\`(?:vk\.(?:com|ru)|vkontakte\.ru)\`;
+const VK_HOST = String.raw`(?:vk\.(?:com|ru)|vkontakte\.ru)`;
 
 export function numericGroupId(input) {
   const value = input.trim();
