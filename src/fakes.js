@@ -14,8 +14,22 @@ export class FakeVkIdentity {
 }
 
 export class FakeVkAnalytics {
-  constructor({ serviceToken }) { if (!serviceToken) throw new Error('VK_SERVICE_TOKEN missing'); this.tokenType = 'service'; }
-  async resolveCommunity(domain) { if (domain !== 'volthash') throw new Error('community not found'); return { id: 777 }; }
-  async communityProfile(id) { return { id, name: id === '777' ? 'Volthash' : `Community ${id}` }; }
-  async communityMetrics(id, period) { return { members: 1532, posts: 84, views: 28140, id, period }; }
+  constructor({ serviceToken }) {
+    if (!serviceToken) throw new Error('VK_SERVICE_TOKEN missing');
+    this.tokenType = 'service';
+    this.calls = [];
+  }
+  async resolveCommunity(domain, options) {
+    this.calls.push({ method: 'groups.getById', domain, ...options });
+    if (domain !== 'volthash') throw new Error('community not found');
+    return { id: 777 };
+  }
+  async communityProfile(id, options) {
+    this.calls.push({ method: 'groups.getById', id, ...options });
+    return { id, name: id === '777' ? 'Volthash' : `Community ${id}` };
+  }
+  async communityMetrics(id, period, options) {
+    this.calls.push({ method: 'wall.get', id, period, ...options });
+    return { members: 1532, posts: 84, views: 28140, id, period };
+  }
 }
