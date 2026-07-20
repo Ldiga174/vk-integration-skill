@@ -8,15 +8,18 @@ export class SafeIntegrationError extends Error {
   toLog() { return { stage: this.stage, method: this.method, message: this.message }; }
 }
 
+const VK_HOST = String.raw`(?:vk\\.(?:com|ru)|vkontakte\\.ru)`;
+
 export function numericGroupId(input) {
   const value = input.trim();
-  const match = value.match(/^(?:https?:\/\/)?(?:m\.)?vk\.com\/(?:club|public|event)(\d+)\/?$/i)
-    ?? value.match(/^(?:club|public|event)(\d+)$/i);
+  const urlPattern = new RegExp(`^(?:https?:\\/\\/)?(?:(?:www|m)\\.)?${VK_HOST}\\/(?:club|public|event)(\\d+)\\/?$`, 'i');
+  const match = value.match(urlPattern) ?? value.match(/^(?:club|public|event)(\d+)$/i);
   return match ? match[1] : null;
 }
 
 export function shortDomain(input) {
   const value = input.trim().replace(/\/$/, '');
-  const match = value.match(/^(?:https?:\/\/)?(?:m\.)?vk\.com\/([a-z0-9_.-]+)$/i);
+  const urlPattern = new RegExp(`^(?:https?:\\/\\/)?(?:(?:www|m)\\.)?${VK_HOST}\\/([a-z0-9_.-]+)$`, 'i');
+  const match = value.match(urlPattern);
   return match && !/^(club|public|event)\d+$/i.test(match[1]) ? match[1] : null;
 }
