@@ -18,10 +18,13 @@ export class VkIntegrationService {
     if (!groupId) {
       const domain = shortDomain(input);
       if (!domain) throw new SafeIntegrationError('community_resolve', 'groups.getById', 'Unsupported VK community link');
-      const resolved = await this.vkAnalytics.resolveCommunity(domain);
+      // VK API 5.199 may reject a short domain for some service-token profile types.
+      // Resolve the domain through the compatible 5.130 contract, then use only
+      // the numeric ID for profile and statistics calls on 5.199.
+      const resolved = await this.vkAnalytics.resolveCommunity(domain, { apiVersion: '5.130', parameter: 'group_id' });
       groupId = String(resolved.id);
     }
-    const publicProfile = await this.vkAnalytics.communityProfile(groupId);
+    const publicProfile = await this.vkAnalytics.communityProfile(groupId, { apiVersion: '5.199' });
     return this.db.upsertCredential({ userId, platform: 'vk', channelId: groupId, status: 'needs_sync', metadata: { name: publicProfile.name } });
   }
 
@@ -29,7 +32,7 @@ export class VkIntegrationService {
     const credential = this.db.credential(userId, 'vk', channelId);
     if (!credential) throw new SafeIntegrationError('save', 'credential lookup', 'Community is not connected');
     try {
-      const metrics = await this.vkAnalytics.communityMetrics(channelId, period);
+      const metrics = await this.vkAnalytics.communityMetrics(channelId, period, { apiVersion: '5.199' });
       this.db.upsertMetrics({ userId, platform: 'vk', channelId, period, metrics });
       return this.db.upsertCredential({ ...credential, status: 'connected', lastSyncedAt: new Date().toISOString(), lastError: null });
     } catch (error) {
